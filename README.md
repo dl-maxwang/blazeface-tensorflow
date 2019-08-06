@@ -1,6 +1,9 @@
 # blazeface-tensorflow
 tensorflow implementation of BlazeFace
 
+Dependencies:
+  Tensorflow 1.14
+
 TODO list:
 1. build model architecture. √
 2. build loss and training pipeline
