@@ -21,12 +21,12 @@ def build_network(img_size: tuple, channels=3):
         with tf.variable_scope('double_blaze'):
             db1 = double_blaze_block(bb1, filters=96, mid_channels=24, stride=2, phase_train=phrase_train)
             db1 = double_blaze_block(db1, filters=96, mid_channels=24, phase_train=phrase_train)
-            db1 = double_blaze_block(db1, filters=96, mid_channels=24, phase_train=phrase_train)
-            db1 = double_blaze_block(db1, filters=96, mid_channels=24, stride=2, phase_train=phrase_train)
-            db1 = double_blaze_block(db1, filters=96, mid_channels=24, phase_train=phrase_train)
-            db1 = double_blaze_block(db1, filters=96, mid_channels=24, phase_train=phrase_train)
-            db1 = double_blaze_block(db1, filters=96, mid_channels=24, phase_train=phrase_train)
-    return inputs, phrase_train, tf.identity(db1, 'output')
+            anchor16by16 = double_blaze_block(db1, filters=96, mid_channels=24, phase_train=phrase_train)
+            db2 = double_blaze_block(anchor16by16, filters=96, mid_channels=24, stride=2, phase_train=phrase_train)
+            db2 = double_blaze_block(db2, filters=96, mid_channels=24, phase_train=phrase_train)
+            db2 = double_blaze_block(db2, filters=96, mid_channels=24, phase_train=phrase_train)
+            anchor8by8 = double_blaze_block(db2, filters=96, mid_channels=24, phase_train=phrase_train)
+    return inputs, phrase_train, tf.identity(anchor16by16, 'feature_map1'), tf.identity(anchor8by8, 'feature_map2')
 
 
 def blaze_block(x: tf.Tensor, filters, mid_channels=None, stride=1, phase_train=True):
@@ -81,7 +81,9 @@ def double_blaze_block(x: tf.Tensor, filters, mid_channels=None, stride=1, phase
 
 
 if __name__ == '__main__':
-    inputs, phrase_train, output = build_network((128, 128))
+    inputs, phrase_train, feature_map1, feature_map2 = build_network((128, 128))
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
-        out = sess.run(output, feed_dict={inputs: np.random.random((16, 128, 128, 3)), phrase_train: True})
+        out1, out2 = sess.run((feature_map1, feature_map2), feed_dict={inputs: np.random.random((16, 128, 128, 3)), phrase_train: True})
+        print(out1.shape)
+        print(out2.shape)
